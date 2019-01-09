@@ -31,3 +31,6 @@ url='https://raw.githubusercontent.com/hrx-events/ghostbuster/master/ghostbuster
 curl -sSl "$url" >"$ghostbuster"
 sudo mv "$ghostbuster" "$target"
 sudo chmod +x "$target"
+
+info "Done - happy ghost hunting."
+info "Please type 'ghostbuster' to run Ghostbuster."
