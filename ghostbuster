@@ -63,7 +63,6 @@ trap 'rm -f $followers_file $ghost_file' EXIT
 while true;
 do
   next=""
-  rm -f followers.txt
 
   info 'Fetching first 100 followers'
   for i in $(seq 1 5);
@@ -75,23 +74,24 @@ do
     fi
     result="$("$twurl" "$url")"
     next="$(echo "$result" |jq .next_cursor)"
-    echo "$result" |jq .users[] >>followers.txt
+    echo "$result" |jq .users[] >>"$followers_file"
   done
 
   info 'Extracting ghosts'
-  cat followers.txt \
+  cat "$followers_file" \
     |jq -r '. | select(.followers_count < 10 or .statuses_count <= 1) | .screen_name' \
-    |sort -u >fake-accounts.txt
+    |sort -u >"$ghost_file"
 
-  info "Found $(wc -l <fake-accounts.txt) ghosts"
+  info "Found $(wc -l <"$ghost_file") ghosts"
 
-  for i in $(cat fake-accounts.txt);
+  for i in $(cat "$ghost_file");
   do 
     user="$("$twurl" -X POST "/1.1/blocks/create.json?screen_name=$i&skip_status=1" |jq -r .screen_name)"
     details "  Blocked user https://twitter.com/$user"
   done
 
   info "Done, sleeping 5 minutes due to API rate limiting"
+  info "Press [CTRL]+[C] to exit ghostbuster"
   for i in $(seq 1 5);
   do
     sleep 60
