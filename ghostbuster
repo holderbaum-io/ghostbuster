@@ -1,0 +1,67 @@
+#!/bin/bash
+
+info() {
+  printf "[%s] \033[0;32m%s\033[0m\n" "$(date +%Y-%m-%d_%H-%M-%S)" "$1"
+}
+
+error() {
+  printf "[%s] \033[0;31m%s\033[0m\n" "$(date +%Y-%m-%d_%H-%M-%S)" "$1"
+}
+
+details() {
+  printf "[%s] \033[1;33m%s\033[0m\n" "$(date +%Y-%m-%d_%H-%M-%S)" "$1"
+}
+
+if ! command -v twurl &>/dev/null;
+then
+  if ! command -v ruby &>/dev/null;
+  then
+    error "Please install ruby:"
+    error "  On mac, execute 'brew install ruby'"
+    error "  On linux, consult your distros wiki"
+    exit 1
+  fi
+  gem install --user-install -N twurl
+fi
+
+twurl="$(ruby -e 'puts Gem.bin_path("twurl", "twurl")')"
+
+while true;
+do
+  next=""
+  rm -f followers.txt
+
+  info 'Fetching first 100 followers'
+  for i in $(seq 1 5);
+  do
+    url="/1.1/followers/list.json?count=20"
+    if [ -n "$next" ];
+    then
+      url+="&cursor=$next"
+    fi
+    result="$("$twurl" "$url")"
+    next="$(echo "$result" |jq .next_cursor)"
+    echo "$result" |jq .users[] >>followers.txt
+  done
+
+  info 'Extracting ghosts'
+  cat followers.txt \
+    |jq -r '. | select(.followers_count < 10 or .statuses_count <= 1) | .screen_name' \
+    |sort -u >fake-accounts.txt
+
+  info "Found $(wc -l <fake-accounts.txt) ghosts"
+
+  for i in $(cat fake-accounts.txt);
+  do 
+    user="$("$twurl" -X POST "/1.1/blocks/create.json?screen_name=$i&skip_status=1" |jq -r .screen_name)"
+    details "  Blocked user https://twitter.com/$user"
+  done
+
+  info "Done, sleeping 5 minutes due to API rate limiting"
+  for i in $(seq 1 5);
+  do
+    sleep 60
+    echo -n '.'
+  done
+  echo ""
+done
