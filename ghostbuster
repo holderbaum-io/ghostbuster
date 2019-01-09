@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GHOSTBUSTER_VERSION='1.0'
+GHOSTBUSTER_VERSION='1.1'
 
 set -eu
 
@@ -91,6 +91,9 @@ do
     user="$("$twurl" -X POST "/1.1/blocks/create.json?screen_name=$i&skip_status=1" |jq -r .screen_name)"
     details "  Blocked user https://twitter.com/$user"
   done
+
+  truncate -s 0 "$followers_file"
+  truncate -s 0 "$ghost_file"
 
   info "Done, sleeping 5 minutes due to API rate limiting"
   info "Press [CTRL]+[C] to exit ghostbuster"
