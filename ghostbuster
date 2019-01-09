@@ -1,5 +1,7 @@
 #!/bin/bash
 
+GHOSTBUSTER_VERSION='1.0'
+
 set -eu
 
 info() {
@@ -99,3 +101,5 @@ do
   done
   echo ""
 done
+
+# LAST LINE TO DETECT PREVIOUS GHOSTBUSTER
