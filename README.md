@@ -4,7 +4,7 @@ This is ghostbuster! It automatically removes ghost followers. Those are fake ac
 
 ![A scared monster that is hunting some ghosts on a lonely planet](ghostbuster.png)
 
-## How to install
+## How to install / update
 
 In order to install the most recent ghostbuster version simply run this in your
 terminal:

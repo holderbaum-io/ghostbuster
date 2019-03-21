@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GHOSTBUSTER_VERSION='1.1'
+export GHOSTBUSTER_VERSION='1.2'
 
 set -eu
 
@@ -84,12 +84,15 @@ do
     |jq -r '. | select(.followers_count < 10 or .statuses_count <= 1) | .screen_name' \
     |sort -u >"$ghost_file"
 
-  info "Found $(wc -l <"$ghost_file") ghosts"
+  info "Found $(wc -l <"$ghost_file") possible ghosts"
 
   for i in $(cat "$ghost_file");
-  do 
+  do
     user="$("$twurl" -X POST "/1.1/blocks/create.json?screen_name=$i&skip_status=1" |jq -r .screen_name)"
-    details "  Blocked user https://twitter.com/$user"
+    if [ "$user" != "null" ];
+    then
+      details "  Blocked user https://twitter.com/$user"
+    fi
   done
 
   truncate -s 0 "$followers_file"
